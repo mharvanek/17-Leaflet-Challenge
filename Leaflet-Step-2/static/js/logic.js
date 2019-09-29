@@ -1,10 +1,12 @@
 // Earthquake json url
 var earthQuakeUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
+var platesUrl = "static/js/plates.json"
 
 // GET
 d3.json(earthQuakeUrl, function(data) {
   createFeatures(data.features);
 });
+
 
 function createFeatures(earthquakeData) {
 
@@ -48,19 +50,53 @@ function createFeatures(earthquakeData) {
 function createMap(earthquakes) {
 
   // Create map layer
-  var lightmap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+  var darkmap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+    attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
     maxZoom: 18,
-    id: "mapbox.light",
+    id: "mapbox.dark",
     accessToken: API_KEY
   });
+  
+
+  var outdoorsmap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+  attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
+  maxZoom: 18,
+  id: "mapbox.outdoors",
+  accessToken: API_KEY
+});
+
+var satellitemap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+  attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
+  maxZoom: 18,
+  id: "mapbox.satellite",
+  accessToken: API_KEY
+});
+
+// Only one base layer can be shown at a time
+var baseMaps = {
+  Graysacle: darkmap,
+  Outdoors: outdoorsmap,
+  Satellite: satellitemap
+};
+
+  // Initialize all of the LayerGroups we'll be using
+  var layers = {
+//    faultLines: faultLines,
+    earthquakes: earthquakes
+  };  
+
+  var overlays = {
+    "Earthquakes" : layers.earthquakes,
+ //   "Fault Lines" : layers.faultLines
+  };      
 
   // Crete map
   var myMap = L.map("map", {
     center: [
       37.09, -95.71
     ],
-    zoom: 5,
-    layers: [lightmap, earthquakes]
+    zoom: 4,
+    layers: [darkmap, earthquakes]//, faultLines]
   });
 
 
@@ -71,7 +107,7 @@ function createMap(earthquakes) {
             d < 4  ? 'rgb(224, 120, 0)' :
             d < 5  ? 'rgb(224, 60, 0)' :
             d < 6  ? 'rgb(224, 0, 0)' :
-                        'rgb(255,0,0)';
+                     'rgb(255,0,0)';
   }
 
   // Create legend
@@ -94,6 +130,7 @@ function createMap(earthquakes) {
   return div;
   };
   
+  L.control.layers(baseMaps, overlays).addTo(myMap); 
   legend.addTo(myMap);
 
 }
